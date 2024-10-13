@@ -1,0 +1,17 @@
+# Escludi l'ambiente virtuale
+venv/
+
+# Escludi il file .env
+.env
+
+# Escludi i file di database SQLite (se presenti)
+*.sqlite3
+
+# Escludi i file compilati di Python
+*.pyc
+__pycache__/
+
+# Escludi le cartelle di log e di media temporanee
+logs/
+*.log
+media/
