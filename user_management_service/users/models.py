@@ -5,11 +5,11 @@ from django.contrib.auth.models import BaseUserManager
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
         """
-        Crea e salva un utente con il nome utente, email e password forniti.
+        Crea e salva un utente con nome utente, email e password forniti.
         """
         if not email:
             raise ValueError('The Email field must be set')
-        
+
         email = self.normalize_email(email)
         user = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)  # Hashing della password
@@ -24,8 +24,6 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
 
-        if extra_fields.get('role') != 'admin':
-            raise ValueError('Superuser must have role of admin.')
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
         if extra_fields.get('is_superuser') is not True:
@@ -36,7 +34,7 @@ class CustomUserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     """
-    Modello utente personalizzato dove l'email è unica e usata come identificatore.
+    Modello utente personalizzato con nome utente e email come identificatori.
     """
     ROLE_CHOICES = [
         ('admin', 'Administrator'),
@@ -56,4 +54,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['email']
 
     def __str__(self):
+        return self.username
+
+    def get_full_name(self):
+        """
+        Restituisce il nome completo dell'utente (puoi modificare per aggiungere altri campi se necessario).
+        """
+        return self.username
+
+    def get_short_name(self):
+        """
+        Restituisce il nome breve dell'utente.
+        """
         return self.username

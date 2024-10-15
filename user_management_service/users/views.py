@@ -4,22 +4,26 @@ from .serializers import UserSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from .permissions import IsAdmin  # Assicurati che il permesso personalizzato esista
+import logging
+logger = logging.getLogger(__name__)
 
-# Vista per gestire la lista e la creazione degli utenti
-@permission_classes([IsAuthenticated, IsAdmin])  # Solo gli admin possono gestire utenti
+
+# Vista per gestire la lista e la creazione degli utenti (solo admin)
 class UserListCreateView(generics.ListCreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated, IsAdmin]  # Solo gli admin possono gestire utenti
 
-# Vista per gestire un singolo utente (dettagli, aggiornamento e cancellazione)
-@permission_classes([IsAuthenticated, IsAdmin])  # Solo gli admin possono gestire utenti
+# Vista per gestire un singolo utente (dettagli, aggiornamento e cancellazione) - solo admin
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated, IsAdmin]  # Solo gli admin possono gestire utenti
 
+# Vista per il login
 @api_view(['POST'])
 def login_user(request):
     username = request.data.get('username')
@@ -27,10 +31,12 @@ def login_user(request):
     user = authenticate(username=username, password=password)
 
     if user is not None:
+        # Genera il token JWT
         refresh = RefreshToken.for_user(user)
+        
         # Aggiungi l'ID dell'utente e il ruolo al token JWT
         refresh['user_id'] = user.id
-        refresh['role'] = user.role
+        refresh['role'] = user.role  # Aggiunge il ruolo dell'utente al token
 
         return Response({
             'refresh': str(refresh),
