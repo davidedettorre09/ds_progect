@@ -23,7 +23,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -33,9 +32,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'devices',  # App che gestisce i dispositivi
-    'rest_framework',  # Aggiungi Django REST Framework
-    'rest_framework_simplejwt',  # Aggiungi SimpleJWT per la gestione JWT
+    'rest_framework',  # Add the Django REST Framework
+    'rest_framework_simplejwt',  # Add the Django REST Framework JWT
+    'devices',  # Add the devices app
 ]
 
 MIDDLEWARE = [
@@ -68,10 +67,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'device_management_service.wsgi.application'
 
-
 # Database configuration (PostgreSQL)
 DATABASES = {
-     'default': {
+    'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('DB_NAME', 'device_management_db'),
         'USER': os.getenv('DB_USER', 'postgres'),
@@ -80,7 +78,6 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
-
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -98,7 +95,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 LANGUAGE_CODE = 'en-us'
 
@@ -108,21 +104,19 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
 # Django REST Framework & JWT settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Usa l'autenticazione JWT
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',  # Imposta l'autenticazione come predefinita
+        'rest_framework.permissions.IsAuthenticated',
     ),
 }
 
@@ -166,6 +160,3 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
-
-# Rimuovi BASE_API_URL_USER_DEV se non è più necessario o usato in altre parti del progetto
-
