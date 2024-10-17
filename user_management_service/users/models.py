@@ -1,6 +1,9 @@
+import uuid
+
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.contrib.auth.models import BaseUserManager
+
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
@@ -47,7 +50,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='client')
     is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)  # Utilizzato per il pannello di amministrazione
+    is_staff = models.BooleanField(default=False)
+    custom_id = models.UUIDField(unique=True, editable=False, default=uuid.uuid4)
 
     objects = CustomUserManager()
 

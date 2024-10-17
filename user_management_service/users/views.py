@@ -1,15 +1,13 @@
+import logging
+
+from django.contrib.auth.models import update_last_login
 from rest_framework import generics, status
-from .models import User
-from .serializers import UserSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.response import Response
-from django.contrib.auth import authenticate
-from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .permissions import IsAdmin  # Assicurati che il permesso personalizzato esista
-import logging
-from .serializers import CustomTokenObtainPairSerializer
+
+from .models import User
+from .permissions import IsAdmin
+from .serializers import CustomTokenObtainPairSerializer, UserSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -31,26 +29,16 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
 
-# Vista per il login
-@api_view(['POST'])
-def login_user(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-    user = authenticate(username=username, password=password)
+        if response.status_code == status.HTTP_200_OK:
+            user = self.get_serializer().user
 
-    if user is not None:
-        # Genera il token JWT
-        refresh = RefreshToken.for_user(user)
+            # update last login date
+            update_last_login(None, user)
+            logger.info(f"User {user.username} logged in successfully.")
+        else:
+            logger.warning(f"Failed login attempt with username: {request.data.get('username')}")
 
-        # Aggiungi l'ID dell'utente e il ruolo al token JWT
-        refresh['user_id'] = user.id
-        refresh['role'] = user.role  # Assumendo che tu abbia un campo 'role'
-
-        # Restituisci i token JWT (access e refresh)
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        })
-    else:
-        return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        return response

@@ -1,6 +1,5 @@
 from django.urls import path
-from .views import UserListCreateView, UserDetailView, login_user  # Importa le viste necessarie
-from .views import CustomTokenObtainPairView
+from .views import UserListCreateView, UserDetailView, CustomTokenObtainPairView
 urlpatterns = [
     path('users/', UserListCreateView.as_view(), name='user-list-create'),
     path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
