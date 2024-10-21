@@ -3,15 +3,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class IsAdminOrOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        logger.info(f"Request.auth: {request.auth}")  # Log dei dati del token
+        logger.info(f"Request.user: {request.user}")  # Log dei dati dell'utente autenticato
 
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        role = request.auth.get('role')
-        user_id = request.auth.get('user_id')
+        # Otteniamo il ruolo e l'ID direttamente dall'oggetto utente
+        role = getattr(request.user, 'role', None)  # Assicurati che l'utente abbia il campo 'role'
+        user_id = getattr(request.user, 'id', None)
 
         logger.info(f"Role: {role}, User ID: {user_id}, Owner ID: {obj.owner_id}")
 

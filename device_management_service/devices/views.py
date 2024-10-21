@@ -18,16 +18,16 @@ class DeviceListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         # Log per verificare il token JWT
-        logger.info(f"Token JWT in DeviceListCreateView: {self.request.auth}")
+        logger.info(f"Utente autenticato: {self.request.user}")
 
         try:
-            # Preleva l'owner_id dal token JWT
-            owner_id = self.request.auth.get('user_id')
+            # Preleva l'owner_id dall'utente autenticato
+            owner_id = getattr(self.request.user, 'id', None)
             if owner_id:
-                logger.info(f"Owner ID trovato nel token: {owner_id}")
+                logger.info(f"Owner ID trovato per l'utente autenticato: {owner_id}")
                 serializer.save(owner_id=owner_id)
             else:
-                logger.error("Owner ID non trovato nel token JWT.")
+                logger.error("Owner ID non trovato nell'utente autenticato.")
                 raise serializers.ValidationError("Owner ID not found in token.")
         except Exception as e:
             logger.error(e)
