@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class DeviceListCreateView(generics.ListCreateAPIView):
     queryset = Device.objects.all()
     serializer_class = DeviceSerializer
-    permission_classes = [IsAuthenticated, IsAdminOrOwner]  # Aggiungi IsAdminOrOwner
+    permission_classes = [IsAuthenticated, IsAdminOrOwner]
 
     def perform_create(self, serializer):
         # Log per verificare l'utente autenticato
