@@ -33,7 +33,10 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         response = super().post(request, *args, **kwargs)
 
         if response.status_code == status.HTTP_200_OK:
-            user = self.get_serializer().user
+            # L'utente è nel contesto del serializer dopo la validazione
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)  # Validare i dati del serializer
+            user = serializer.user  # Ora puoi ottenere l'utente validato
 
             # update last login date
             update_last_login(None, user)
