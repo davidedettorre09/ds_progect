@@ -14,15 +14,15 @@ logger = logging.getLogger(__name__)
 class DeviceListCreateView(generics.ListCreateAPIView):
     queryset = Device.objects.all()
     serializer_class = DeviceSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminOrOwner]  # Aggiungi IsAdminOrOwner
 
     def perform_create(self, serializer):
-        # Log per verificare il token JWT
+        # Log per verificare l'utente autenticato
         logger.info(f"Utente autenticato: {self.request.user}")
 
         try:
             # Preleva l'owner_id dall'utente autenticato
-            owner_id = getattr(self.request.user, 'id', None)
+            owner_id = self.request.user.id
             if owner_id:
                 logger.info(f"Owner ID trovato per l'utente autenticato: {owner_id}")
                 serializer.save(owner_id=owner_id)
@@ -34,8 +34,6 @@ class DeviceListCreateView(generics.ListCreateAPIView):
             return Response({
                 "Error": f"Unexpected Error: {str(e)}"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
 
 
 # Vista per i dispositivi di un singolo utente

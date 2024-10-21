@@ -11,10 +11,10 @@ class IsAdminOrOwner(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        # Otteniamo il ruolo e l'ID direttamente dall'oggetto utente
-        role = getattr(request.user, 'role', None)  # Assicurati che l'utente abbia il campo 'role'
-        user_id = getattr(request.user, 'id', None)
+        role = getattr(request.user, 'role', None)
+        user_id = request.user.id
 
         logger.info(f"Role: {role}, User ID: {user_id}, Owner ID: {obj.owner_id}")
 
         return role == 'admin' or obj.owner_id == user_id
+
