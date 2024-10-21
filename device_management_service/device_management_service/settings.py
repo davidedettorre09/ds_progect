@@ -173,17 +173,13 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'DEBUG',  # Cambia a DEBUG per vedere tutti i log
+            'level': 'INFO',
+            'propagate': False,
         },
-        'django.request': {
+        'django.db.backends': {
             'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-        'django_auth': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': True,
+            'level': 'ERROR',  # Log only error messages
+            'propagate': False,
         },
         'devices': {
             'handlers': ['console'],
