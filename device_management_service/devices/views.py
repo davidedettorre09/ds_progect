@@ -1,76 +1,81 @@
 from rest_framework import generics, status, serializers
 from rest_framework.response import Response
-from .models import Device
-from .permissions import IsAdminOrReadOnly
-from .serializers import DeviceSerializer
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import permission_classes
+from .models import Device
+from .serializers import DeviceSerializer
+from .permissions import IsAdminOrOwner
+from rest_framework.exceptions import PermissionDenied
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-@permission_classes([IsAuthenticated, IsAdminOrReadOnly])
+# Lista e creazione dei dispositivi
 class DeviceListCreateView(generics.ListCreateAPIView):
     queryset = Device.objects.all()
     serializer_class = DeviceSerializer
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        # Save the owner_id if provided in the request data
-        owner_id = self.request.data.get('owner_id')
-        if owner_id:
-            serializer.save(owner_id=owner_id)
-        else:
-            raise serializers.ValidationError("Owner ID not provided")
+        # Log per verificare il token JWT
+        logger.info(f"Token JWT in DeviceListCreateView: {self.request.auth}")
+
+        try:
+            # Preleva l'owner_id dal token JWT
+            owner_id = self.request.auth.get('user_id')
+            if owner_id:
+                logger.info(f"Owner ID trovato nel token: {owner_id}")
+                serializer.save(owner_id=owner_id)
+            else:
+                logger.error("Owner ID non trovato nel token JWT.")
+                raise serializers.ValidationError("Owner ID not found in token.")
+        except Exception as e:
+            logger.error(e)
+            return Response({
+                "Error": f"Unexpected Error: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@permission_classes([IsAuthenticated])
+
+
+# Vista per i dispositivi di un singolo utente
 class ClientDeviceListView(generics.ListAPIView):
     serializer_class = DeviceSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Obtain the user role and user id from request.user
-        user_role = self.request.user.role
-        user_id = self.request.user.id
+        # Log per verificare il token JWT
+        logger.info(f"Token JWT in ClientDeviceListView: {self.request.auth}")
 
-        # If the user is a client, return the devices owned by the user
-        if user_role == 'client':
-            return Device.objects.filter(owner_id=user_id)
-        return Device.objects.none()
+        user_id = self.request.auth.get('user_id')
+        if user_id:
+            logger.info(f"User ID trovato nel token: {user_id}")
+        else:
+            logger.error("User ID non trovato nel token JWT.")
+
+        return Device.objects.filter(owner_id=user_id)
 
 
-@permission_classes([IsAuthenticated])
+# Dettaglio, aggiornamento e cancellazione dei dispositivi
 class DeviceDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Device.objects.all()
     serializer_class = DeviceSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrOwner]
 
     def get_object(self):
         device = super().get_object()
-        user_role = self.request.user.role
-        user_id = self.request.user.id
+        # Log per verificare il token JWT
+        logger.info(f"Token JWT in DeviceDetailView: {self.request.auth}")
 
-        # If the user is an admin, return the device
-        if user_role == 'admin':
+        user_role = self.request.auth.get('role')
+        user_id = self.request.auth.get('user_id')
+
+        logger.info(f"User role: {user_role}, User ID: {user_id}, Device owner ID: {device.owner_id}")
+
+        # Se l'utente è admin o il proprietario del dispositivo, può accedervi
+        if user_role == 'admin' or device.owner_id == user_id:
+            logger.info("Accesso consentito.")
             return device
 
-        # If the user is a client, return the device only if the user is the owner
-        if user_role == 'client' and device.owner_id == user_id:
-            return device
-
-        # If the user is not a client and not the owner, raise a permission error
-        raise serializers.ValidationError("Non hai il permesso di accedere a questo dispositivo.")
-
-    def update(self, request, *args, **kwargs):
-        user_role = self.request.user.role
-
-        # Only admins can update
-        if user_role != 'admin':
-            return Response({"detail": "Non hai il permesso di aggiornare questo dispositivo."},
-                            status=status.HTTP_403_FORBIDDEN)
-        return super().update(request, *args, **kwargs)
-
-    def destroy(self, request, *args, **kwargs):
-        user_role = self.request.user.role
-
-        # Only admins can delete
-        if user_role != 'admin':
-            return Response({"detail": "Non hai il permesso di cancellare questo dispositivo."},
-                            status=status.HTTP_403_FORBIDDEN)
-        return super().destroy(request, *args, **kwargs)
+        logger.warning("Accesso negato, l'utente non è né admin né il proprietario del dispositivo.")
+        raise PermissionDenied("Non hai il permesso di accedere a questo dispositivo.")

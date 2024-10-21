@@ -1,19 +1,18 @@
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import permissions
+import logging
 
+logger = logging.getLogger(__name__)
 
-# Custom permission class that allows only admins to perform CRUD operations, while other users can only read.
-class IsAdminOrReadOnly(IsAuthenticated):
-    """
-    Custom permission class that allows only admins to perform CRUD operations, while other users can only read.
-    """
+class IsAdminOrOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        logger.info(f"Request.auth: {request.auth}")  # Log dei dati del token
 
-    def has_permission(self, request, view):
-        # Obtain the user role from request.user
-        user_role = request.user.role
+        if request.method in permissions.SAFE_METHODS:
+            return True
 
-        # Only admins can perform POST, PUT, DELETE operations
-        if request.method in ['POST', 'PUT', 'DELETE']:
-            return user_role == 'admin'
+        role = request.auth.get('role')
+        user_id = request.auth.get('user_id')
 
-        # The user can perform GET operations
-        return True
+        logger.info(f"Role: {role}, User ID: {user_id}, Owner ID: {obj.owner_id}")
+
+        return role == 'admin' or obj.owner_id == user_id
