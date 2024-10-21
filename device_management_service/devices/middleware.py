@@ -9,4 +9,3 @@ class AuthLoggingMiddleware(MiddlewareMixin):
         logger.info("=== AuthLoggingMiddleware ===")
         logger.info(f"Authorization Header: {request.headers.get('Authorization')}")
         logger.info(f"request.user: {request.user}")
-        logger.info(f"request.auth: {request.auth}")

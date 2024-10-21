@@ -16,9 +16,16 @@ class DeviceListCreateView(generics.ListCreateAPIView):
     serializer_class = DeviceSerializer
     permission_classes = [IsAuthenticated, IsAdminOrOwner]
 
+    def get_queryset(self):
+        # Loggare informazioni sull'autenticazione
+        logger.info(f"Utente Autenticato: {self.request.user}")
+        logger.info(f"Auth Token: {self.request.auth}")
+        return super().get_queryset()
+
     def perform_create(self, serializer):
         # Log per verificare l'utente autenticato
         logger.info(f"Utente autenticato: {self.request.user}")
+        logger.info(f"Auth Token: {self.request.auth}")
 
         try:
             # Preleva l'owner_id dall'utente autenticato
