@@ -186,7 +186,7 @@ LOGGING = {
             'propagate': True,
         },
         'devices': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'DEBUG',  # or 'INFO' for less logs (production)
             'propagate': False,
         },
