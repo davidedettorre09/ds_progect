@@ -1,11 +1,13 @@
-import { useState } from "react"
 import './Login.css'
+import { useState } from "react"
+import { useNavigate } from 'react-router-dom'
 import userServices from "../../services/userServices"
 
 const Login = () => {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const { loginUser } = userServices;
+    const navigate = useNavigate();
 
     const loginHandler = async (e) => {
       e.preventDefault()
@@ -13,6 +15,11 @@ const Login = () => {
         try {
             const user = await loginUser({username: username, password: password});
             console.log('User:', user)
+            if (user?.role == 'admin') {
+              navigate('/admin-dashboard')
+            } else {
+              navigate('/my-devices')
+            }
             // Redirect to dashboard page
         } catch (error) {
             console.error('Error:', error)

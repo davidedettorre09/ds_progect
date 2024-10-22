@@ -1,6 +1,6 @@
-import axiosInstance from "./axiosConfigUser";
+import axiosInstance from "./axiosConfig";
 
-const BASE_API_URL = process.env.REACT_APP_BASE_API_URL;
+const BASE_API_URL = process.env.REACT_APP_BASE_API_URL_USER;
 
 /**
  * Registers a new user with the provided user data.
@@ -31,7 +31,7 @@ const loginUser = async (userData) => {
     const response = await axiosInstance.post(`${BASE_API_URL}/login/`, userData);
 
     // Destructure access and refresh tokens from the response
-    const { access, refresh, } = response.data;
+    const { access, refresh} = response.data;
 
     if (access && refresh) {
       // Save the tokens in localStorage (you can also use secure cookies)

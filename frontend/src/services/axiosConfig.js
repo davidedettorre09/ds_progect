@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_API_URL = process.env.REACT_APP_BASE_API_URL_DEVICE;
+const BASE_API_URL = process.env.REACT_APP_BASE_API_URL_USER;
 
 const axiosInstance = axios.create({
     baseURL: BASE_API_URL,
@@ -16,10 +16,10 @@ const authAxios = axios.create({
     },
 });
 
-// Funzione per verificare se il token scaduto
+// Funzione per verificare se il token è scaduto
 const isTokenExpired = async (token) => {
     try {
-        await authAxios.post("/auth/token/verify/", { token });
+        await authAxios.post("/token/verify/", { token });
         return false;  // Token valido
     } catch (error) {
         if (error.response && [401, 403].includes(error.response.status)) {
@@ -33,7 +33,7 @@ const isTokenExpired = async (token) => {
 // Funzione per aggiornare il token di accesso
 const refreshAccessToken = async (refreshToken) => {
     try {
-        const response = await authAxios.post("/auth/token/refresh/", { refresh: refreshToken });
+        const response = await authAxios.post("/token/refresh/", { refresh: refreshToken });
         return response.data.access;
     } catch (error) {
         console.error('Errore durante il refresh del token:', error);
@@ -49,23 +49,24 @@ axiosInstance.interceptors.request.use(
         const token = localStorage.getItem('token');
         const refreshToken = localStorage.getItem('refreshToken');
 
-        //console.log('Interceptor: Token iniziale:', token);
-
         if (token) {
             try {
                 const isExpired = await isTokenExpired(token);
-                //console.log('Interceptor: Token scaduto:', isExpired);
 
-                if (isExpired) {
+                if (isExpired && refreshToken) {
+                    // Se il token è scaduto, tenta di aggiornarlo
                     const newAccessToken = await refreshAccessToken(refreshToken);
-                    //console.log('Interceptor: Nuovo token di accesso:', newAccessToken);
                     localStorage.setItem('token', newAccessToken);
                     config.headers['Authorization'] = `Bearer ${newAccessToken}`;
                 } else {
+                    // Se il token non è scaduto, utilizzalo
                     config.headers['Authorization'] = `Bearer ${token}`;
                 }
             } catch (error) {
-                console.error('Interceptor: Errore durante la gestione del token:', error);
+                console.error('Errore durante la gestione del token:', error);
+                // Rimuovi i token se c'è stato un errore nel verificare o aggiornare il token
+                localStorage.removeItem('token');
+                localStorage.removeItem('refreshToken');
                 throw error;
             }
         }
@@ -74,6 +75,19 @@ axiosInstance.interceptors.request.use(
     },
     (error) => {
         console.error('Interceptor: Errore nella richiesta:', error);
+        return Promise.reject(error);
+    }
+);
+
+// Interceptor per gestire le risposte con errori (come 401 Unauthorized)
+axiosInstance.interceptors.response.use(
+    (response) => response,  // Passa le risposte positive senza modifiche
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            console.error('Unauthorized - Possibile token JWT scaduto o non valido');
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+        }
         return Promise.reject(error);
     }
 );

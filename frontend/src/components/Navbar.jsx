@@ -1,9 +1,29 @@
-import { useState } from "react"
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from "react"
+import { Link, useNavigate } from 'react-router-dom'
 import './Navbar.css'
+import userServices from "../services/userServices"
 
 const Navbar = () => {
     const [menuOpened, setMenuOpened] = useState(false)
+    const [isLoggedIn, setIsLoggedIn] = useState(false)
+    const {logoutUser} = userServices
+    const navigate = useNavigate()
+
+    useEffect(()=>{
+      const token = localStorage.getItem('token')
+      if(token){
+        setIsLoggedIn(true)
+      } else {
+        setIsLoggedIn(false)
+      }
+    }, [])
+
+    const handleLogout = async () => {
+      await logoutUser()
+      setIsLoggedIn(false)
+      navigate('/')
+    }
+
 
   return (
     <>
@@ -16,7 +36,8 @@ const Navbar = () => {
           <Link to={'/'}>Home</Link>
         </ul>
         <div className="header__quick">
-        <Link to={'/login'}>LOGIN</Link>
+        {isLoggedIn && <a onClick={handleLogout}>LOGOUT</a>}
+        {!isLoggedIn && <Link to={'/login'}>LOGIN</Link>}
           <div onClick={()=>setMenuOpened(!menuOpened)} className="icon-hamburger">
             <span></span>
             <span></span>
