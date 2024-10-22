@@ -16,6 +16,7 @@ const Navbar = () => {
           <Link to={'/'}>Home</Link>
         </ul>
         <div className="header__quick">
+        <Link to={'/login'}>LOGIN</Link>
           <div onClick={()=>setMenuOpened(!menuOpened)} className="icon-hamburger">
             <span></span>
             <span></span>

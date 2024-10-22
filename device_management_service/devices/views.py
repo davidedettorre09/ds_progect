@@ -32,7 +32,7 @@ class DeviceListCreateView(generics.ListCreateAPIView):
             owner_id = self.request.user.id
             if owner_id:
                 logger.info(f"Owner ID trovato per l'utente autenticato: {owner_id}")
-                serializer.save(owner_id=owner_id)
+                serializer.save()
             else:
                 logger.error("Owner ID non trovato nell'utente autenticato.")
                 raise serializers.ValidationError("Owner ID not found in token.")
